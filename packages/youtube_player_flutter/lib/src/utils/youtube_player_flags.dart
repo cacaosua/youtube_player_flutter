@@ -4,6 +4,11 @@
 
 /// Defines player flags for [YoutubePlayer].
 class YoutubePlayerFlags {
+  /// If set to true, hides the Play Pause Button.
+  ///
+  /// Default is false.
+  final bool hidePlayPauseButton;
+
   /// If set to true, hides the controls.
   ///
   /// Default is false.
@@ -76,6 +81,7 @@ class YoutubePlayerFlags {
 
   /// Creates [YoutubePlayerFlags].
   const YoutubePlayerFlags({
+    this.hidePlayPauseButton = false,
     this.hideControls = false,
     this.controlsVisibleAtStart = false,
     this.autoPlay = true,
@@ -94,6 +100,7 @@ class YoutubePlayerFlags {
 
   /// Copies new values assigned to the [YoutubePlayerFlags].
   YoutubePlayerFlags copyWith({
+    bool? hidePlayPauseButton,
     bool? hideControls,
     bool? autoPlay,
     bool? mute,
@@ -111,6 +118,7 @@ class YoutubePlayerFlags {
     bool? useHybridComposition,
   }) {
     return YoutubePlayerFlags(
+      hidePlayPauseButton: hidePlayPauseButton ?? this.hidePlayPauseButton,
       autoPlay: autoPlay ?? this.autoPlay,
       captionLanguage: captionLanguage ?? this.captionLanguage,
       disableDragSeek: disableDragSeek ?? this.disableDragSeek,
