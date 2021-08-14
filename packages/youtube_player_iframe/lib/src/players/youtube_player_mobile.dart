@@ -11,9 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:youtube_player_iframe/src/enums/youtube_error.dart';
-import 'package:youtube_player_iframe/src/helpers/player_fragments.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
-import 'package:url_launcher/url_launcher.dart' as url_launcher;
+// import 'package:url_launcher/url_launcher.dart' as url_launcher;
 
 import '../controller.dart';
 import '../enums/player_state.dart';
@@ -95,11 +94,12 @@ class _MobileYoutubePlayerState extends State<RawYoutubePlayer>
       key: ValueKey(controller.hashCode),
       initialData: InAppWebViewInitialData(
         data: player,
-        baseUrl: Uri.parse(
-          controller.params.privacyEnhanced
-              ? 'https://www.youtube-nocookie.com'
-              : 'https://www.youtube.com',
-        ),
+        // baseUrl: Uri.parse(
+        //   // controller.params.privacyEnhanced
+        //   //     ? 'https://www.youtube-nocookie.com'
+        //   //     : 'https://www.youtube.com',
+        //   'www.dailymotion.com'
+        // ),
         encoding: 'utf-8',
         mimeType: 'text/html',
       ),
@@ -134,18 +134,18 @@ class _MobileYoutubePlayerState extends State<RawYoutubePlayer>
         ),
       ),
       shouldOverrideUrlLoading: (_, detail) async {
-        final uri = detail.request.url;
-        if (uri == null) return NavigationActionPolicy.CANCEL;
+        // final uri = detail.request.url;
+        // if (uri == null) return NavigationActionPolicy.CANCEL;
 
-        final feature = uri.queryParameters['feature'];
-        if (feature == 'emb_rel_pause') {
-          if (uri.queryParameters.containsKey('v')) {
-            controller.load(uri.queryParameters['v']!);
-          }
-        } else {
-          url_launcher.launch(uri.toString());
-        }
-        return NavigationActionPolicy.CANCEL;
+        // final feature = uri.queryParameters['feature'];
+        // if (feature == 'emb_rel_pause') {
+        //   if (uri.queryParameters.containsKey('v')) {
+        //     controller.load(uri.queryParameters['v']!);
+        //   }
+        // } else {
+        //   url_launcher.launch(uri.toString());
+        // }
+        return NavigationActionPolicy.ALLOW;
       },
       onWebViewCreated: (webController) {
         if (!_webController.isCompleted) {
@@ -180,6 +180,7 @@ class _MobileYoutubePlayerState extends State<RawYoutubePlayer>
       ..addJavaScriptHandler(
         handlerName: 'Ready',
         callback: (_) {
+          print(111);
           _isPlayerReady = true;
           if (_onLoadStopCalled) {
             controller.add(
@@ -191,6 +192,7 @@ class _MobileYoutubePlayerState extends State<RawYoutubePlayer>
       ..addJavaScriptHandler(
         handlerName: 'StateChange',
         callback: (args) {
+          print(222);
           switch (args.first as int) {
             case -1:
               controller.add(
@@ -245,6 +247,7 @@ class _MobileYoutubePlayerState extends State<RawYoutubePlayer>
       ..addJavaScriptHandler(
         handlerName: 'PlaybackQualityChange',
         callback: (args) {
+          print(333);
           controller.add(
             controller.value.copyWith(playbackQuality: args.first as String),
           );
@@ -253,6 +256,7 @@ class _MobileYoutubePlayerState extends State<RawYoutubePlayer>
       ..addJavaScriptHandler(
         handlerName: 'PlaybackRateChange',
         callback: (args) {
+          print(444);
           final num rate = args.first;
           controller.add(
             controller.value.copyWith(playbackRate: rate.toDouble()),
@@ -262,6 +266,7 @@ class _MobileYoutubePlayerState extends State<RawYoutubePlayer>
       ..addJavaScriptHandler(
         handlerName: 'Errors',
         callback: (args) {
+          print(555);
           controller.add(
             controller.value.copyWith(error: errorEnum(args.first as int)),
           );
@@ -270,6 +275,7 @@ class _MobileYoutubePlayerState extends State<RawYoutubePlayer>
       ..addJavaScriptHandler(
         handlerName: 'VideoData',
         callback: (args) {
+          print(666);
           controller.add(
             controller.value
                 .copyWith(metaData: YoutubeMetaData.fromRawData(args.first)),
@@ -279,6 +285,7 @@ class _MobileYoutubePlayerState extends State<RawYoutubePlayer>
       ..addJavaScriptHandler(
         handlerName: 'VideoTime',
         callback: (args) {
+          print(777);
           final position = args.first * 1000;
           final num buffered = args.last;
           controller.add(
@@ -293,50 +300,87 @@ class _MobileYoutubePlayerState extends State<RawYoutubePlayer>
 
   String get player => '''
     <!DOCTYPE html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+      </head>
     <body>
-         ${youtubeIFrameTag(controller)}
+        <div 
+          id="player-dailymotion"
+          style="
+            position:absolute; top:0px; 
+            left:0px; bottom:0px; right:10px; 
+            width:100%; height:100%; border:none; 
+            margin:0; padding:0; overflow:hidden; 
+            z-index:999999;
+          "
+        ></div>
+        <script src="https://api.dmcdn.net/all.js"></script>
         <script>
-            $initPlayerIFrame
-            var player;
-            var timerId;
-            function onYouTubeIframeAPIReady() {
-                player = new YT.Player('player', {
-                    events: {
-                        onReady: function(event) { window.flutter_inappwebview.callHandler('Ready'); },
-                        onStateChange: function(event) { sendPlayerStateChange(event.data); },
-                        onPlaybackQualityChange: function(event) { window.flutter_inappwebview.callHandler('PlaybackQualityChange', event.data); },
-                        onPlaybackRateChange: function(event) { window.flutter_inappwebview.callHandler('PlaybackRateChange', event.data); },
-                        onError: function(error) { window.flutter_inappwebview.callHandler('Errors', error.data); }
-                    },
-                });
-            }
+        	let isFullScreen = false;
+          setTimeout(function() {
+            var player = DM.player(document.querySelector('#player-dailymotion'), {
+              video: 'x831qo4',
+              width: '100%',
+              height: '100%',
+              params: {
+                autoplay: 1,
+                logo: 0,
+                controls: 1,
+                mute: 1
+              }
+            });
 
-            function sendPlayerStateChange(playerState) {
-                clearTimeout(timerId);
-                window.flutter_inappwebview.callHandler('StateChange', playerState);
-                if (playerState == 1) {
-                    startSendCurrentTimeInterval();
-                    sendVideoData(player);
+            player.addEventListener('apiready', function(e) {
+              console.log('api ready', e);
+              
+            });
+
+            player.addEventListener('error', function(e) {
+              console.log('error', e);
+            });
+
+            player.addEventListener('canplay', function(e) {
+              console.log('canplay', e);
+            });
+
+            player.addEventListener('fullscreenchange', function(e) {
+              if(isFullScreen != e.target.fullscreen) {
+                isFullScreen = e.target.fullscreen;
+                if(!isFullScreen) {
+                  setTimeout(function() {
+                    // player.contentWindow.postMessage('{"command":"pause","parameters":[]}', "*")
+                    player.play();
+                  }, 400);
+                  
                 }
-            }
+              }
+            });
 
-            function sendVideoData(player) {
-                var videoData = {
-                    'duration': player.getDuration(),
-                    'title': player.getVideoData().title,
-                    'author': player.getVideoData().author,
-                    'videoId': player.getVideoData().video_id
-                };
-                window.flutter_inappwebview.callHandler('VideoData', videoData);
-            }
+            // player.addEventListener('progress', function(e) {
+            //   console.log('progress', e);
+            // });
 
-            function startSendCurrentTimeInterval() {
-                timerId = setInterval(function () {
-                    window.flutter_inappwebview.callHandler('VideoTime', player.getCurrentTime(), player.getVideoLoadedFraction());
-                }, 100);
-            }
+            player.addEventListener('play', function(e) {
+              console.log('ad_play', e);
+              // player.setFullscreen(true);
+            });
 
-            $youtubeIFrameFunctions
+            player.addEventListener('end', function(e) {
+              console.log('ad_end', e);
+              // player.setFullscreen(false);
+            });
+
+            document.querySelector('#play').addEventListener('click', function() {
+              console.log('click on play');
+              player.play();
+            });
+
+            document.querySelector('#pause').addEventListener('click', function() {
+              console.log('click on pause');
+              player.pause();
+            });
+
+          }, 1000);
         </script>
     </body>
   ''';
@@ -345,3 +389,50 @@ class _MobileYoutubePlayerState extends State<RawYoutubePlayer>
       ? 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36'
       : '';
 }
+
+
+// <script>
+//   console.log(111111);
+//   $initPlayerIFrame
+//   var player;
+//   var timerId;
+//   function onYouTubeIframeAPIReady() {
+//       console.log(111111);
+//       player = new YT.Player('player', {
+//           events: {
+//               onReady: function(event) { window.flutter_inappwebview.callHandler('Ready'); },
+//               onStateChange: function(event) { sendPlayerStateChange(event.data); },
+//               onPlaybackQualityChange: function(event) { window.flutter_inappwebview.callHandler('PlaybackQualityChange', event.data); },
+//               onPlaybackRateChange: function(event) { window.flutter_inappwebview.callHandler('PlaybackRateChange', event.data); },
+//               onError: function(error) { window.flutter_inappwebview.callHandler('Errors', error.data); }
+//           },
+//       });
+//   }
+
+//   function sendPlayerStateChange(playerState) {
+//       clearTimeout(timerId);
+//       window.flutter_inappwebview.callHandler('StateChange', playerState);
+//       if (playerState == 1) {
+//           startSendCurrentTimeInterval();
+//           sendVideoData(player);
+//       }
+//   }
+
+//   function sendVideoData(player) {
+//       var videoData = {
+//           'duration': player.getDuration(),
+//           'title': player.getVideoData().title,
+//           'author': player.getVideoData().author,
+//           'videoId': player.getVideoData().video_id
+//       };
+//       window.flutter_inappwebview.callHandler('VideoData', videoData);
+//   }
+
+//   function startSendCurrentTimeInterval() {
+//       timerId = setInterval(function () {
+//           window.flutter_inappwebview.callHandler('VideoTime', player.getCurrentTime(), player.getVideoLoadedFraction());
+//       }, 100);
+//   }
+
+//   $youtubeIFrameFunctions
+// </script>

@@ -25,18 +25,31 @@ String youtubeIFrameTag(YoutubePlayerController controller) {
     if (controller.params.playlist.isNotEmpty)
       'playlist': '${controller.params.playlist.join(',')}'
   };
-  final youtubeAuthority = controller.params.privacyEnhanced
-      ? 'www.youtube-nocookie.com'
-      : 'www.youtube.com';
+  // final youtubeAuthority = controller.params.privacyEnhanced
+  //     ? 'www.youtube-nocookie.com'
+  //     : 'www.youtube.com';
+  final youtubeAuthority = 'www.dailymotion.com';
   final sourceUri = Uri.https(
     youtubeAuthority,
-    'embed/${controller.initialVideoId}',
-    params,
+    '/embed/video/${controller.initialVideoId}',
+    // params,
   );
-  return '<iframe id="player" type="text/html"'
-      ' style="position:absolute; top:0px; left:0px; bottom:0px; right:10px;'
-      ' width:100%; height:100%; border:none; margin:0; padding:0; overflow:hidden; z-index:999999;"'
-      ' src="$sourceUri" frameborder="0" allowfullscreen></iframe>';
+  return '''
+  <iframe 
+    id="player" 
+    type="text/html"
+    style="
+      position:absolute; top:0px; 
+      left:0px; bottom:0px; right:10px; 
+      width:100%; height:100%; border:none; 
+      margin:0; padding:0; overflow:hidden; 
+      z-index:999999;
+    "
+    src="$sourceUri?client_type=iosapp&app=vn.com.netlove.app&logo=false&fullscreen=true&sharing-enable=false&autoplay=true" 
+    frameborder="0" 
+    allowfullscreen
+  ></iframe>
+  ''';
 }
 
 ///
@@ -129,7 +142,7 @@ function hidePauseOverlay() {
 ///
 String get initPlayerIFrame => '''
 var tag = document.createElement('script');
-tag.src = "https://www.youtube.com/iframe_api";
+tag.src = "https://www.dailymotion.com";
 var firstScriptTag = document.getElementsByTagName('script')[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 ''';

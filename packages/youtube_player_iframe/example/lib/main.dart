@@ -49,28 +49,20 @@ class _YoutubeAppDemoState extends State<YoutubeAppDemo> {
   void initState() {
     super.initState();
     _controller = YoutubePlayerController(
-      initialVideoId: 'tcodrIK2P_I',
+      initialVideoId: 'x831qo4',
       params: const YoutubePlayerParams(
-        playlist: [
-          'nPt8bK2gbaU',
-          'K18cpp_-gP8',
-          'iLnmTe5Q2Qw',
-          '_WoCV4c6XOE',
-          'KmzdUe0RSJo',
-          '6jZDSSZZxjQ',
-          'p2lYr3vM_1w',
-          '7QUtEmBT_-w',
-          '34_PXCzGw1M',
-        ],
-        startAt: const Duration(minutes: 1, seconds: 36),
+        // startAt: const Duration(minutes: 1, seconds: 36),
         showControls: true,
         showFullscreenButton: true,
         desktopMode: true,
-        privacyEnhanced: true,
+        privacyEnhanced: false,
         useHybridComposition: true,
       ),
     );
     _controller.onEnterFullscreen = () {
+      // SystemChrome.setEnabledSystemUIOverlays([]);
+      // SystemChrome.setEnabledSystemUIOverlays(SystemUiOverlay.values);
+      // SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.bottom]);
       SystemChrome.setPreferredOrientations([
         DeviceOrientation.landscapeLeft,
         DeviceOrientation.landscapeRight,
@@ -92,30 +84,7 @@ class _YoutubeAppDemoState extends State<YoutubeAppDemo> {
         appBar: AppBar(
           title: const Text('Youtube Player IFrame'),
         ),
-        body: LayoutBuilder(
-          builder: (context, constraints) {
-            if (kIsWeb && constraints.maxWidth > 800) {
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Expanded(child: player),
-                  const SizedBox(
-                    width: 500,
-                    child: SingleChildScrollView(
-                      child: Controls(),
-                    ),
-                  ),
-                ],
-              );
-            }
-            return ListView(
-              children: [
-                player,
-                const Controls(),
-              ],
-            );
-          },
-        ),
+        body: player,
       ),
     );
   }

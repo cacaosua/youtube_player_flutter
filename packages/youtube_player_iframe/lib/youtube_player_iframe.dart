@@ -56,9 +56,16 @@ class YoutubePlayerIFrame extends StatelessWidget {
   Widget build(BuildContext context) {
     return AspectRatio(
       aspectRatio: aspectRatio,
-      child: RawYoutubePlayer(
-        controller: controller ?? context.ytController,
-        gestureRecognizers: gestureRecognizers,
+      child: Stack(
+        children: [
+          Container(
+            color: Colors.black,
+          ),
+          RawYoutubePlayer(
+            controller: controller ?? context.ytController,
+            gestureRecognizers: gestureRecognizers,
+          ),
+        ],
       ),
     );
   }
